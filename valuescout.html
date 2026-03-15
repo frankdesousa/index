@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueScout Pro</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f5f0e8;font-family:'DM Serif Display',Georgia,serif;color:#1a1208;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#c8b89a}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+header{background:#1a1208;color:#f5f0e8;padding:14px 18px;border-bottom:2px solid #c17f24;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:10px}
+header h1{font-size:20px;letter-spacing:.02em;white-space:nowrap}
+header h1 em{color:#c17f24;font-style:italic}
+header small{font-family:'DM Mono',monospace;font-size:8px;color:#6a5a40;letter-spacing:.2em;display:block;margin-top:2px}
+#last-scan{font-family:'DM Mono',monospace;font-size:10px;color:#c8b89a;text-align:right;flex-shrink:0}
+
+.container{max-width:960px;margin:0 auto;padding:16px 14px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+@media(min-width:560px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:#fff;border:1px solid #e0d5c5;padding:11px 13px}
+.stat-label{font-family:'DM Mono',monospace;font-size:8px;color:#8a7a60;letter-spacing:.15em;text-transform:uppercase;margin-bottom:3px}
+.stat-value{font-size:22px;line-height:1}
+.stat-sub{font-family:'DM Mono',monospace;font-size:9px;color:#a09080;margin-top:2px}
+
+/* Controls */
+.controls{background:#fff;border:1px solid #e0d5c5;padding:14px 16px;margin-bottom:14px}
+.controls-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.controls-top h3{font-size:13px;font-family:'DM Mono',monospace;color:#6a5a40;letter-spacing:.1em;text-transform:uppercase}
+#scan-btn{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:10px 20px;background:#1a1208;color:#f5f0e8;border:none;cursor:pointer;transition:all .15s;border-radius:1px;white-space:nowrap}
+#scan-btn:hover{background:#2d2010;transform:translateY(-1px)}
+#scan-btn:disabled{background:#9e9080;cursor:not-allowed;transform:none}
+
+/* Category tabs */
+.cat-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.cat-tab{font-family:'DM Mono',monospace;font-size:9px;padding:5px 10px;background:transparent;border:1px solid #d0c5b0;cursor:pointer;color:#8a7a60;border-radius:1px;transition:all .15s;letter-spacing:.08em;text-transform:uppercase}
+.cat-tab.active{background:#1a1208;color:#f5f0e8;border-color:#1a1208}
+
+/* Sport checkboxes grid */
+.sports-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+@media(min-width:480px){.sports-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:700px){.sports-grid{grid-template-columns:repeat(4,1fr)}}
+.sport-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid #e0d5c5;cursor:pointer;background:#fafaf7;transition:all .15s;user-select:none}
+.sport-item:hover{background:#f0ebe0;border-color:#c8b89a}
+.sport-item.checked{background:#1a1208;border-color:#1a1208;color:#f5f0e8}
+.sport-item input{display:none}
+.sport-item span{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.05em;line-height:1.3}
+.sel-all{font-family:'DM Mono',monospace;font-size:9px;color:#8a7a60;cursor:pointer;text-decoration:underline;margin-left:auto;background:none;border:none;padding:2px 4px}
+
+/* Results tabs */
+.tabs{border-bottom:1px solid #e0d5c5;display:flex;margin-bottom:14px}
+.tab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;background:transparent;border:none;cursor:pointer;color:#8a7a60;border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:#1a1208;border-bottom-color:#c17f24}
+
+.error{background:#fff3f0;border:1px solid #e8a090;padding:11px 13px;margin-bottom:12px;font-family:'DM Mono',monospace;font-size:11px;color:#a03020;border-radius:1px}
+.empty{text-align:center;padding:50px 20px;color:#8a7a60;font-family:'DM Mono',monospace;font-size:11px;line-height:1.6}
+.loading-msg{text-align:center;padding:30px 20px;color:#8a7a60;font-family:'DM Mono',monospace;font-size:11px}
+
+.card{background:#fff;border:1px solid #e0d5c5;padding:15px;margin-bottom:9px;animation:fadeUp .3s ease;transition:box-shadow .2s}
+.card:hover{box-shadow:3px 3px 0 #1a120812}
+.card-value{border-left:3px solid #c17f24}
+.card-arb{border-left:3px solid #2a7f4f}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;gap:8px}
+.card-title{font-size:16px;margin-bottom:3px;line-height:1.2}
+.card-meta{font-family:'DM Mono',monospace;font-size:9px;color:#8a7a60}
+.badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:1px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.badge-value{background:#fdf0d8;color:#c17f24;border:1px solid #e8c87a}
+.badge-arb{background:#d8f0e4;color:#2a7f4f;border:1px solid #7acca0}
+.badge-sport{background:#ede8e0;color:#6a5a40;border:1px solid #d0c5b0;margin-right:4px}
+
+.grid-5{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:9px 0}
+@media(min-width:480px){.grid-5{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:680px){.grid-5{grid-template-columns:repeat(5,1fr)}}
+.col-label{font-family:'DM Mono',monospace;font-size:8px;color:#8a7a60;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.col-value{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+.tip{padding:9px 11px;font-family:'DM Mono',monospace;font-size:10px;border-radius:1px;margin-top:6px;line-height:1.5}
+.tip-value{background:#fdf8f0;border:1px solid #e8d8b0;color:#6a4a10}
+.tip-arb{background:#f0f8f4;border:1px solid #90d0b0;color:#1a5a30}
+hr{border:none;border-top:1px solid #e0d5c5;margin:9px 0}
+
+.arb-outcomes{display:grid;gap:7px;margin:9px 0}
+@media(min-width:480px){.arb-outcomes{grid-template-columns:repeat(3,1fr)}}
+.arb-outcome{border:1px solid #c0e0d0;padding:10px;background:#f0f8f4}
+.arb-name{font-family:'DM Mono',monospace;font-size:9px;color:#4a8a60;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.arb-odds{font-family:'DM Mono',monospace;font-size:20px;color:#2a7f4f}
+.arb-book{font-family:'DM Mono',monospace;font-size:9px;color:#6a8a70;margin-top:2px}
+.arb-stake{font-family:'DM Mono',monospace;font-size:12px;color:#1a1208;margin-top:5px;font-weight:500}
+
+.progress{background:#fff;border:1px solid #e0d5c5;padding:12px 14px;margin-bottom:12px;display:none}
+.progress-label{font-family:'DM Mono',monospace;font-size:10px;color:#6a5a40;margin-bottom:6px}
+.progress-bar-wrap{background:#f0ebe0;height:4px;border-radius:2px;overflow:hidden}
+.progress-bar-fill{height:4px;background:#c17f24;border-radius:2px;transition:width .3s ease;width:0%}
+.progress-text{font-family:'DM Mono',monospace;font-size:9px;color:#8a7a60;margin-top:4px}
+
+.loader{display:inline-block;width:13px;height:13px;border:2px solid #6a5a40;border-top-color:#f5f0e8;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+
+footer{margin-top:24px;padding-top:12px;border-top:1px solid #e0d5c5;font-family:'DM Mono',monospace;font-size:9px;color:#a09080;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>ValueScout <em>Pro</em></h1>
+    <small>BETCLIC VALUE BETTING & ARBITRAGE DETECTOR</small>
+  </div>
+  <div id="last-scan"></div>
+</header>
+
+<div class="container">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Bankroll simulado</div>
+      <div class="stat-value">€1000</div>
+      <div class="stat-sub">base de cálculo</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Value bets</div>
+      <div class="stat-value" id="stat-value" style="color:#c17f24">0</div>
+      <div class="stat-sub">edge ≥ 3%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Arbitrajes</div>
+      <div class="stat-value" id="stat-arb" style="color:#2a7f4f">0</div>
+      <div class="stat-sub">sin riesgo</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">EV sesión</div>
+      <div class="stat-value" id="stat-ev">+€0.00</div>
+      <div class="stat-sub">acumulado</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="controls-top">
+      <h3>Deportes a escanear</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="sel-all" onclick="selectAll()">Todos</button>
+        <button class="sel-all" onclick="selectNone()">Ninguno</button>
+        <button id="scan-btn" onclick="scan()">▶ Escanear</button>
+      </div>
+    </div>
+
+    <!-- Category filters -->
+    <div class="cat-tabs" id="cat-tabs">
+      <button class="cat-tab active" onclick="filterCat('all')">Todos</button>
+      <button class="cat-tab" onclick="filterCat('football')">⚽ Fútbol</button>
+      <button class="cat-tab" onclick="filterCat('basketball')">🏀 Basket</button>
+      <button class="cat-tab" onclick="filterCat('tennis')">🎾 Tenis</button>
+      <button class="cat-tab" onclick="filterCat('american')">🏈 Americano</button>
+      <button class="cat-tab" onclick="filterCat('other')">🎯 Otros</button>
+    </div>
+
+    <div class="sports-grid" id="sports-grid"></div>
+  </div>
+
+  <div class="progress" id="progress-box">
+    <div class="progress-label">Escaneando deportes...</div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    <div class="progress-text" id="progress-text">0 / 0</div>
+  </div>
+
+  <div class="error" id="error-box" style="display:none"></div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-value" onclick="switchTab('value')">Value Bets (<span id="count-value">0</span>)</button>
+    <button class="tab" id="tab-btn-arb" onclick="switchTab('arb')">Arbitrajes (<span id="count-arb">0</span>)</button>
+  </div>
+
+  <div id="tab-value">
+    <div class="empty" id="empty-value">Selecciona deportes y pulsa ▶ Escanear</div>
+    <div id="list-value"></div>
+  </div>
+  <div id="tab-arb" style="display:none">
+    <div class="empty" id="empty-arb">Selecciona deportes y pulsa ▶ Escanear</div>
+    <div id="list-arb"></div>
+  </div>
+
+  <footer>
+    <span>Kelly 25% · Edge mín. 3% · Bookmakers: Betclic, Pinnacle, Bet365, Unibet, William Hill</span>
+    <span>⚠ Solo informativo — apuesta con responsabilidad</span>
+  </footer>
+</div>
+
+<script>
+const API_KEY = '6c5ee7b438b9db981a15eb5fe66b18f6';
+const KELLY = 0.25;
+const EDGE_MIN = 0.03;
+const BANKROLL = 1000;
+
+// All sports with categories
+const ALL_SPORTS = [
+  // Football
+  {key:'soccer_portugal_primeira_liga', label:'Primeira Liga 🇵🇹', cat:'football'},
+  {key:'soccer_uefa_champs_league', label:'Champions League ⭐', cat:'football'},
+  {key:'soccer_uefa_europa_league', label:'Europa League', cat:'football'},
+  {key:'soccer_spain_la_liga', label:'La Liga 🇪🇸', cat:'football'},
+  {key:'soccer_england_league1', label:'Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿', cat:'football'},
+  {key:'soccer_germany_bundesliga', label:'Bundesliga 🇩🇪', cat:'football'},
+  {key:'soccer_italy_serie_a', label:'Serie A 🇮🇹', cat:'football'},
+  {key:'soccer_france_ligue_one', label:'Ligue 1 🇫🇷', cat:'football'},
+  {key:'soccer_netherlands_eredivisie', label:'Eredivisie 🇳🇱', cat:'football'},
+  {key:'soccer_brazil_campeonato', label:'Brasileirão 🇧🇷', cat:'football'},
+  {key:'soccer_argentina_primera_division', label:'Argentina Primera 🇦🇷', cat:'football'},
+  {key:'soccer_turkey_super_league', label:'Süper Lig 🇹🇷', cat:'football'},
+  // Basketball
+  {key:'basketball_nba', label:'NBA 🏀', cat:'basketball'},
+  {key:'basketball_euroleague', label:'EuroLeague 🇪🇺', cat:'basketball'},
+  {key:'basketball_ncaab', label:'NCAA Basketball', cat:'basketball'},
+  // Tennis
+  {key:'tennis_atp_french_open', label:'ATP French Open 🎾', cat:'tennis'},
+  {key:'tennis_wta_french_open', label:'WTA French Open', cat:'tennis'},
+  {key:'tennis_atp_us_open', label:'ATP US Open', cat:'tennis'},
+  // American sports
+  {key:'americanfootball_nfl', label:'NFL 🏈', cat:'american'},
+  {key:'baseball_mlb', label:'MLB ⚾', cat:'american'},
+  {key:'icehockey_nhl', label:'NHL 🏒', cat:'american'},
+  // Other
+  {key:'mma_mixed_martial_arts', label:'MMA 🥊', cat:'other'},
+  {key:'boxing_boxing', label:'Boxeo 🥊', cat:'other'},
+  {key:'rugbyleague_nrl', label:'Rugby League 🏉', cat:'other'},
+  {key:'cricket_icc_world_cup', label:'Cricket 🏏', cat:'other'},
+];
+
+let checked = new Set(['soccer_portugal_primeira_liga','soccer_uefa_champs_league','soccer_spain_la_liga']);
+let currentCat = 'all';
+let allValues = [], allArbs = [];
+let totalEV = 0;
+let activeTab = 'value';
+
+function renderSports() {
+  const grid = document.getElementById('sports-grid');
+  grid.innerHTML = '';
+  const visible = currentCat === 'all' ? ALL_SPORTS : ALL_SPORTS.filter(s => s.cat === currentCat);
+  visible.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'sport-item' + (checked.has(s.key) ? ' checked' : '');
+    div.innerHTML = `<span>${s.label}</span>`;
+    div.onclick = () => {
+      if (checked.has(s.key)) checked.delete(s.key);
+      else checked.add(s.key);
+      renderSports();
+    };
+    grid.appendChild(div);
+  });
+}
+
+function filterCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderSports();
+}
+
+function selectAll() {
+  ALL_SPORTS.filter(s => currentCat === 'all' || s.cat === currentCat).forEach(s => checked.add(s.key));
+  renderSports();
+}
+
+function selectNone() {
+  ALL_SPORTS.filter(s => currentCat === 'all' || s.cat === currentCat).forEach(s => checked.delete(s.key));
+  renderSports();
+}
+
+function switchTab(t) {
+  activeTab = t;
+  document.getElementById('tab-value').style.display = t === 'value' ? 'block' : 'none';
+  document.getElementById('tab-arb').style.display = t === 'arb' ? 'block' : 'none';
+  document.getElementById('tab-btn-value').classList.toggle('active', t === 'value');
+  document.getElementById('tab-btn-arb').classList.toggle('active', t === 'arb');
+}
+
+function removeVig(probs) {
+  const total = probs.reduce((a, b) => a + b, 0);
+  return probs.map(p => p / total);
+}
+
+function kellyBet(prob, odds) {
+  const b = odds - 1, q = 1 - prob;
+  const k = (b * prob - q) / b;
+  return Math.min(Math.max(0, BANKROLL * k * KELLY), BANKROLL * 0.05);
+}
+
+function analyzeValue(markets) {
+  const results = [];
+  for (const market of markets) {
+    if (!market.bookmakers) continue;
+    const betclic = market.bookmakers.find(b => b.key === 'betclic' || b.title?.toLowerCase().includes('betclic'));
+    if (!betclic) continue;
+    const h2h = betclic.markets?.find(m => m.key === 'h2h');
+    if (!h2h) continue;
+
+    const allOdds = {};
+    for (const bm of market.bookmakers) {
+      const mkt = bm.markets?.find(m => m.key === 'h2h');
+      if (!mkt) continue;
+      for (const o of mkt.outcomes) {
+        if (!allOdds[o.name]) allOdds[o.name] = [];
+        allOdds[o.name].push(o.price);
+      }
+    }
+
+    const rawProbs = h2h.outcomes.map(o => {
+      const arr = allOdds[o.name] || [o.price];
+      return 1 / (arr.reduce((a,b)=>a+b,0)/arr.length);
+    });
+    const fairProbs = removeVig(rawProbs);
+
+    h2h.outcomes.forEach((outcome, i) => {
+      const mktProb = 1 / outcome.price;
+      const fairProb = fairProbs[i];
+      const edge = fairProb - mktProb;
+      if (edge >= EDGE_MIN) {
+        const bet = kellyBet(fairProb, outcome.price);
+        results.push({
+          match: `${market.home_team} vs ${market.away_team}`,
+          sport: market.sport_title,
+          commence: market.commence_time,
+          outcome: outcome.name,
+          odds: outcome.price,
+          fairProb: (fairProb*100).toFixed(1),
+          mktProb: (mktProb*100).toFixed(1),
+          edge: (edge*100).toFixed(1),
+          bet: bet.toFixed(2),
+          ev: (bet*edge).toFixed(2),
+        });
+      }
+    });
+  }
+  return results.sort((a,b) => b.edge - a.edge);
+}
+
+function analyzeArb(markets) {
+  const results = [];
+  for (const market of markets) {
+    if (!market.bookmakers || market.bookmakers.length < 2) continue;
+    const best = {}, bestBook = {};
+    for (const bm of market.bookmakers) {
+      for (const mkt of bm.markets || []) {
+        if (mkt.key !== 'h2h') continue;
+        for (const o of mkt.outcomes) {
+          if (!best[o.name] || o.price > best[o.name]) {
+            best[o.name] = o.price;
+            bestBook[o.name] = bm.title;
+          }
+        }
+      }
+    }
+    const keys = Object.keys(best);
+    if (keys.length < 2) continue;
+    const impliedSum = keys.reduce((s,k) => s + 1/best[k], 0);
+    if (impliedSum < 1) {
+      results.push({
+        match: `${market.home_team} vs ${market.away_team}`,
+        sport: market.sport_title,
+        commence: market.commence_time,
+        outcomes: keys.map(k => ({name:k, odds:best[k], book:bestBook[k], stake:(BANKROLL/best[k]/impliedSum).toFixed(2)})),
+        profit: (((1/impliedSum)-1)*100).toFixed(2),
+      });
+    }
+  }
+  return results.sort((a,b) => b.profit - a.profit);
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('pt-PT', {weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
+function renderValue(values) {
+  const list = document.getElementById('list-value');
+  const empty = document.getElementById('empty-value');
+  document.getElementById('count-value').textContent = values.length;
+  document.getElementById('stat-value').textContent = values.length;
+
+  if (!values.length) {
+    empty.style.display = 'block';
+    empty.textContent = 'Sin value bets con edge ≥ 3% en los deportes escaneados';
+    list.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = values.map(v => `
+    <div class="card card-value">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${v.match}</div>
+          <div class="card-meta">
+            <span class="badge badge-sport">${v.sport}</span>
+            ${fmtDate(v.commence)}
+          </div>
+        </div>
+        <span class="badge badge-value">Edge +${v.edge}%</span>
+      </div>
+      <hr>
+      <div class="grid-5">
+        <div><div class="col-label">Apuesta</div><div class="col-value" style="color:#1a1208;font-family:'DM Serif Display',serif;font-size:15px">${v.outcome}</div></div>
+        <div><div class="col-label">Cuota Betclic</div><div class="col-value" style="color:#c17f24">${v.odds}</div></div>
+        <div><div class="col-label">Prob. mercado</div><div class="col-value">${v.mktProb}%</div></div>
+        <div><div class="col-label">Prob. justa</div><div class="col-value" style="color:#2a7f4f">${v.fairProb}%</div></div>
+        <div><div class="col-label">Stake Kelly</div><div class="col-value" style="color:#1a1208">€${v.bet}</div></div>
+      </div>
+      <div class="tip tip-value">→ Apuesta <strong>€${v.bet}</strong> a <strong>${v.outcome}</strong> @ ${v.odds} en Betclic · EV esperado: <strong>+€${v.ev}</strong></div>
+    </div>
+  `).join('');
+}
+
+function renderArb(arbs) {
+  const list = document.getElementById('list-arb');
+  const empty = document.getElementById('empty-arb');
+  document.getElementById('count-arb').textContent = arbs.length;
+  document.getElementById('stat-arb').textContent = arbs.length;
+
+  if (!arbs.length) {
+    empty.style.display = 'block';
+    empty.textContent = 'Sin arbitrajes en este momento';
+    list.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = arbs.map(a => `
+    <div class="card card-arb">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${a.match}</div>
+          <div class="card-meta">
+            <span class="badge badge-sport">${a.sport}</span>
+            ${fmtDate(a.commence)}
+          </div>
+        </div>
+        <span class="badge badge-arb">+${a.profit}% garantizado</span>
+      </div>
+      <hr>
+      <div class="arb-outcomes">
+        ${a.outcomes.map(o=>`
+          <div class="arb-outcome">
+            <div class="arb-name">${o.name}</div>
+            <div class="arb-odds">${o.odds}</div>
+            <div class="arb-book">en ${o.book}</div>
+            <div class="arb-stake">Stake: €${o.stake}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="tip tip-arb">→ Reparte €${BANKROLL} según los stakes · Ganancia garantizada: <strong>+€${(BANKROLL*parseFloat(a.profit)/100).toFixed(2)}</strong></div>
+    </div>
+  `).join('');
+}
+
+async function fetchSport(sportKey) {
+  const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu&markets=h2h&bookmakers=betclic,pinnacle,bet365,williamhill,unibet&oddsFormat=decimal`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function scan() {
+  const selected = [...checked];
+  if (!selected.length) {
+    showError('Selecciona al menos un deporte.');
+    return;
+  }
+
+  const btn = document.getElementById('scan-btn');
+  const progressBox = document.getElementById('progress-box');
+  const fill = document.getElementById('progress-fill');
+  const progressText = document.getElementById('progress-text');
+  const errorBox = document.getElementById('error-box');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>Escaneando...';
+  errorBox.style.display = 'none';
+  progressBox.style.display = 'block';
+  allValues = []; allArbs = [];
+
+  let done = 0;
+  const errors = [];
+
+  for (const sportKey of selected) {
+    const sport = ALL_SPORTS.find(s => s.key === sportKey);
+    progressText.textContent = `${sport?.label || sportKey} · ${done}/${selected.length}`;
+    fill.style.width = `${(done/selected.length)*100}%`;
+
+    try {
+      const markets = await fetchSport(sportKey);
+      allValues.push(...analyzeValue(markets));
+      allArbs.push(...analyzeArb(markets));
+    } catch(e) {
+      errors.push(`${sport?.label}: ${e.message}`);
+    }
+
+    done++;
+    fill.style.width = `${(done/selected.length)*100}%`;
+    progressText.textContent = `${done}/${selected.length} deportes escaneados`;
+
+    // Small delay to avoid rate limiting
+    if (done < selected.length) await new Promise(r => setTimeout(r, 300));
+  }
+
+  progressBox.style.display = 'none';
+  btn.disabled = false;
+  btn.innerHTML = '▶ Escanear';
+
+  // Sort combined results
+  allValues.sort((a,b) => b.edge - a.edge);
+  allArbs.sort((a,b) => b.profit - a.profit);
+
+  const ev = allValues.reduce((s,v) => s + parseFloat(v.ev), 0);
+  totalEV = +(totalEV + ev).toFixed(2);
+
+  document.getElementById('stat-ev').textContent = `+€${totalEV}`;
+  document.getElementById('stat-ev').style.color = totalEV > 0 ? '#2a7f4f' : '#1a1208';
+  document.getElementById('last-scan').textContent = `${new Date().toLocaleTimeString()} · ${selected.length} deportes · ${allValues.length + allArbs.length} oportunidades`;
+
+  renderValue(allValues);
+  renderArb(allArbs);
+
+  if (errors.length) showError('Algunos deportes sin datos: ' + errors.join(' | '));
+
+  // Auto-switch to best tab
+  if (allValues.length > 0) switchTab('value');
+  else if (allArbs.length > 0) switchTab('arb');
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = '⚠ ' + msg;
+  box.style.display = 'block';
+}
+
+// Init
+renderSports();
+</script>
+</body>
+</html>
